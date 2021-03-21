@@ -3,8 +3,8 @@ TODO
 
 ## Prerequisites
 * [Numpy](https://www.numpy.org/): `$pip3 install numpy`
-* [OpenCV](https://opencv.org/): `$pip3 install opencv-python`
 * [PyTorch](https://pytorch.org/): `$pip3 install torch torchvision`
+* [OpenCV](https://opencv.org/) (only needed by the test script): `$pip3 install opencv-python`
 * [ibug.face_detection](https://github.com/hhj1897/face_detection) (only needed by the test script). See this repository for details: [https://github.com/hhj1897/face_detection](https://github.com/hhj1897/face_detection).
 * [ibug.face_alignment](https://github.com/hhj1897/face_alignment). See this repository for details: [https://github.com/hhj1897/face_alignment](https://github.com/hhj1897/face_alignment)
 

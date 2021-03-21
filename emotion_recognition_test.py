@@ -4,8 +4,8 @@ import time
 import torch
 from argparse import ArgumentParser
 from ibug.face_alignment import FANPredictor
-from ibug.emotion_recognition import EmoNetPredictor
 from ibug.face_alignment.utils import plot_landmarks
+from ibug.emotion_recognition import EmoNetPredictor
 from ibug.face_detection import RetinaFacePredictor, S3FDPredictor
 
 
@@ -39,6 +39,13 @@ def main() -> None:
                         help='Weights to be loaded for face alignment, can be either 2DFAN2 or 2DFAN4')
     parser.add_argument('--alignment-device', '-ad', default='cuda:0',
                         help='Device to be used for face alignment (default=cuda:0)')
+
+    parser.add_argument('--emotion-method', '-em', default='emonet',
+                        help='Emotion recognition method, must be set to EmoNet')
+    parser.add_argument('--emotion-weights', '-ew', default=None,
+                        help='Weights to be loaded for emotion recognition, can be either EmNet248 or EmoNet245')
+    parser.add_argument('--emotion-device', '-ed', default='cuda:0',
+                        help='Device to be used for emotion recognition (default=cuda:0)')
     args = parser.parse_args()
 
     # Set benchmark mode flag for CUDNN
@@ -73,6 +80,16 @@ def main() -> None:
         else:
             raise ValueError('alignment-method must be set to FAN')
 
+        # Create the emotion recogniser
+        args.emotion_method = args.emotion_method.lower()
+        if args.emotion_method == 'emonet':
+            emotion_recogniser = EmoNetPredictor(device=args.emotion_device,
+                                                 model=(EmoNetPredictor.get_model(args.emotion_weights)
+                                                        if args.emotion_weights else None))
+            print('Emotion recogniser created using EmoNet.')
+        else:
+            raise ValueError('emotion-method must be set to EmoNet')
+
         # Open the input video
         using_webcam = not os.path.exists(args.input)
         vid = cv2.VideoCapture(int(args.input) if using_webcam else args.input)
@@ -92,6 +109,11 @@ def main() -> None:
 
         # Process the frames
         frame_number = 0
+        if len(emotion_recogniser.config.emotion_labels) == 8:
+            emotion_colours = ((192, 192, 192), (0, 255, 0), (255, 0, 0), (0, 255, 255),
+                               (0, 128, 255), (255, 0, 128), (0, 0, 255), (128, 255, 0))
+        else:
+            emotion_colours = ((192, 192, 192), (0, 255, 0), (255, 0, 0), (0, 255, 255), (0, 0, 255))
         window_title = os.path.splitext(os.path.basename(__file__))[0]
         print('Processing started, press \'Q\' to quit.')
         while True:
@@ -108,21 +130,33 @@ def main() -> None:
 
                 # Face alignment
                 start_time = current_time
-                landmarks, scores = landmark_detector(frame, faces, rgb=False)
+                landmarks, scores, fan_features = landmark_detector(frame, faces, rgb=False, return_features=True)
                 current_time = time.time()
                 elapsed_time2 = current_time - start_time
 
+                # Emotion recognition
+                start_time = current_time
+                emotions = emotion_recogniser(fan_features)
+                current_time = time.time()
+                elapsed_time3 = current_time - start_time
+
                 # Textural output
                 print(f'Frame #{frame_number} processed in {elapsed_time * 1000.0:.04f} + ' +
-                      f'{elapsed_time2 * 1000.0:.04f} ms: {len(faces)} faces analysed..')
+                      f'{elapsed_time2 * 1000.0:.04f} + {elapsed_time3 * 1000.0:.04f} ms: ' +
+                      f'{len(faces)} faces analysed.')
 
                 # Rendering
-                for face, lm, sc in zip(faces, landmarks, scores):
+                for idx, (face, lm, sc) in enumerate(zip(faces, landmarks, scores)):
                     bbox = face[:4].astype(int)
                     cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color=(0, 0, 255), thickness=2)
                     plot_landmarks(frame, lm, sc, threshold=args.alignment_threshold)
                     if len(face) > 5:
                         plot_landmarks(frame, face[5:].reshape((-1, 2)), pts_radius=3)
+                    emo = emotion_recogniser.config.emotion_labels[emotions['emotion'][idx]].title()
+                    val, ar = emotions['valence'][idx], emotions['arousal'][idx]
+                    text_content = f'{emo} ({val: .01f}, {ar: .01f})'
+                    cv2.putText(frame, text_content, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_DUPLEX,
+                                0.5, emotion_colours[emotions['emotion'][idx]], lineType=cv2.LINE_AA)
 
                 # Write the frame to output video (if recording)
                 if out_vid is not None:
