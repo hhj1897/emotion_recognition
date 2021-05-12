@@ -43,7 +43,8 @@ def main() -> None:
     parser.add_argument('--emotion-method', '-em', default='emonet',
                         help='Emotion recognition method, must be set to EmoNet')
     parser.add_argument('--emotion-weights', '-ew', default=None,
-                        help='Weights to be loaded for emotion recognition, can be either EmNet248 or EmoNet245')
+                        help='Weights to be loaded for emotion recognition, can be either ' +
+                             'EmoNet248, EmoNet245, EmoNet248_alt, or EmoNet245_alt')
     parser.add_argument('--emotion-device', '-ed', default='cuda:0',
                         help='Device to be used for emotion recognition (default=cuda:0)')
     args = parser.parse_args()
