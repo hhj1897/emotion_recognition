@@ -42,18 +42,18 @@ class EmoNetPredictor(object):
                                    config=SimpleNamespace(num_input_channels=768, input_size=64, n_blocks=4, n_reg=2,
                                                           emotion_labels=('neutral', 'happy', 'sad',
                                                                           'surprise', 'anger')))
-        if name == 'emonet248_alt':
-            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', 'emonet248_alt.pth'),
+        if name == 'emonet248_2':
+            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', 'emonet248_2.pth'),
                                    config=SimpleNamespace(num_input_channels=768, input_size=64, n_blocks=4, n_reg=2,
                                                           emotion_labels=('neutral', 'happy', 'sad', 'surprise',
                                                                           'fear', 'disgust', 'anger', 'contempt')))
-        elif name == 'emonet245_alt':
-            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', 'emonet245_alt.pth'),
+        elif name == 'emonet245_2':
+            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', 'emonet245_2.pth'),
                                    config=SimpleNamespace(num_input_channels=768, input_size=64, n_blocks=4, n_reg=2,
                                                           emotion_labels=('neutral', 'happy', 'sad',
                                                                           'surprise', 'anger')))
         else:
-            raise ValueError("name must be set to either emonet248 or emonet245")
+            raise ValueError("name must be set to either emonet248, emonet245, emonet248_2, or emonet245_2")
 
     @torch.no_grad()
     def __call__(self, fan_features: torch.Tensor) -> Dict:

@@ -49,7 +49,7 @@ def main() -> None:
                         help='Emotion recognition method, must be set to EmoNet')
     parser.add_argument('--emotion-weights', '-ew', default=None,
                         help='Weights to be loaded for emotion recognition, can be either ' +
-                             'EmoNet248, EmoNet245, EmoNet248_alt, or EmoNet245_alt')
+                             'EmoNet248, EmoNet245, EmoNet248_2, or EmoNet245_2')
     parser.add_argument('--emotion-alternative-pth', '-ep', default=None,
                         help='Alternative pth file to be loaded for emotion recognition')
     parser.add_argument('--emotion-device', '-ed', default='cuda:0',
